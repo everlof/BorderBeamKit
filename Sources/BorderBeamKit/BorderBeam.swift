@@ -14,6 +14,7 @@ import SwiftUI
 /// stroke ring layer window-masked by a rotating conic gradient, and a blurred
 /// bloom ring — all drawn by the `beamRotateLayer` Metal shader from data in
 /// the shared `beam-spec.json`.
+@available(iOS 17.0, macOS 14.0, *)
 public struct BorderBeam<Content: View>: View {
     private let size: BeamSize
     private let colorVariant: BeamColorVariant
@@ -199,6 +200,7 @@ public struct BorderBeam<Content: View>: View {
 
 // MARK: - View modifier sugar
 
+@available(iOS 17.0, macOS 14.0, *)
 public extension View {
     /// Wraps the view in a ``BorderBeam``.
     func borderBeam(

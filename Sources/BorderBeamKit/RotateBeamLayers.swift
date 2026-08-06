@@ -110,6 +110,7 @@ struct RotateBeamConfig {
 /// The three composited layers of the rotate-family beam, driven per-frame by
 /// `TimelineView`. Layer order matches the web z-indices: inner (1), stroke
 /// (2), bloom (3, blurred).
+@available(iOS 17.0, macOS 14.0, *)
 struct RotateBeamLayers: View {
     let config: RotateBeamConfig
     let fade: BeamFade
@@ -117,7 +118,9 @@ struct RotateBeamLayers: View {
     @Environment(\.beamFrozenTime) private var frozenTime
 
     var body: some View {
-        TimelineView(.animation) { timeline in
+        // Paused when frozen: t and fade are both constants then, so ticking
+        // buys nothing.
+        TimelineView(.animation(paused: frozenTime != nil)) { timeline in
             let t = frozenTime ?? timeline.date.timeIntervalSinceReferenceDate
             layers(at: t, fade: frozenTime != nil ? 1 : fade.value(at: timeline.date))
         }

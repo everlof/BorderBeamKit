@@ -23,6 +23,7 @@ struct LineBeamConfig {
 }
 
 /// The three `line` layers: inner glow (z1), stroke band (z2), bloom (z3).
+@available(iOS 17.0, macOS 14.0, *)
 struct LineBeamLayers: View {
     let config: LineBeamConfig
     let fade: BeamFade
@@ -30,7 +31,9 @@ struct LineBeamLayers: View {
     @Environment(\.beamFrozenTime) private var frozenTime
 
     var body: some View {
-        TimelineView(.animation) { timeline in
+        // Paused when frozen: t and fade are both constants then, so ticking
+        // buys nothing.
+        TimelineView(.animation(paused: frozenTime != nil)) { timeline in
             let t = frozenTime ?? timeline.date.timeIntervalSinceReferenceDate
             GeometryReader { geo in
                 layers(

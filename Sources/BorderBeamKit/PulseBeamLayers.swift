@@ -68,6 +68,7 @@ enum PulseBeamPart {
     case stroke   // pulse-outside: 1px ring, in .overlay
 }
 
+@available(iOS 17.0, macOS 14.0, *)
 struct PulseBeamLayers: View {
     let config: PulseBeamConfig
     let fade: BeamFade
@@ -77,8 +78,11 @@ struct PulseBeamLayers: View {
 
     var body: some View {
         // Not paused under reduced motion: the fade still needs frames — the
-        // breathing itself is frozen by pinning t to 0 below.
-        TimelineView(.animation) { timeline in
+        // breathing itself is frozen by pinning t to 0 below. A frozen time is
+        // different: t and fade are both constants there, so ticking buys
+        // nothing and the timeline pauses. An AppKit host uses that as its
+        // zero-cost static mode (`BorderBeamHostView.rendersStatically`).
+        TimelineView(.animation(paused: frozenTime != nil)) { timeline in
             let t = frozenTime ?? (config.reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)
             GeometryReader { geo in
                 layers(

@@ -5,9 +5,11 @@ let package = Package(
     name: "BorderBeamKit",
     platforms: [
         .iOS(.v17),
-        // macOS 14 ships the same SwiftUI Shader APIs; kept so the package can
-        // be type-checked and previewed on Mac during development.
-        .macOS(.v14),
+        // The Shader APIs need macOS 14, but the package links into apps that
+        // deploy to macOS 13 (Threading), so the floor is 13 and every view is
+        // annotated @available(macOS 14.0, *). BorderBeamHostView is the
+        // AppKit seam such an app embeds behind its own availability check.
+        .macOS(.v13),
     ],
     products: [
         .library(name: "BorderBeamKit", targets: ["BorderBeamKit"])

@@ -1,0 +1,29 @@
+name: BorderBeamDemo
+options:
+  bundleIdPrefix: com.jakubantalik
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+packages:
+  BorderBeamKit:
+    path: ..
+
+targets:
+  BorderBeamDemo:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources
+    dependencies:
+      - package: BorderBeamKit
+        product: BorderBeamKit
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Border Beam
+        INFOPLIST_KEY_NSHumanReadableCopyright: "MIT — Jakub Antalik"
+        PRODUCT_BUNDLE_IDENTIFIER: com.jakubantalik.BorderBeamDemo
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Automatic

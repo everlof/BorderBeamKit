@@ -100,4 +100,36 @@ import Testing
             #expect(abs(a - b) < 1e-5)
         }
     }
+
+    @Test func pulseMonoPaletteOpposesTheSurfaceAppearance() {
+        let source = BeamRGBA(r: 0.75, g: 0.5, b: 0.25, a: 0.4)
+        let dark = pulseConfig(variant: .mono, theme: "dark")
+        let light = pulseConfig(variant: .mono, theme: "light")
+        let colorfulLight = pulseConfig(variant: .colorful, theme: "light")
+
+        #expect(dark.appearanceAdjustedPaletteColor(source) == source)
+        #expect(light.appearanceAdjustedPaletteColor(source) == BeamRGBA(
+            r: 0.25,
+            g: 0.5,
+            b: 0.75,
+            a: 0.4
+        ))
+        #expect(colorfulLight.appearanceAdjustedPaletteColor(source) == source)
+    }
+
+    private func pulseConfig(variant: BeamColorVariant, theme: String) -> PulseBeamConfig {
+        PulseBeamConfig(
+            size: .pulseInner,
+            variant: variant,
+            theme: theme,
+            staticColors: variant == .mono,
+            duration: PulseBeamConfig.defaultPulseDuration,
+            borderRadius: nil,
+            brightness: nil,
+            saturation: nil,
+            strength: 1,
+            reduceMotion: false,
+            tuning: .none
+        )
+    }
 }

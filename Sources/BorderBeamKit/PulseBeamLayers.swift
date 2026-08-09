@@ -33,6 +33,15 @@ struct PulseBeamConfig {
     var huePeriod: Double { spec.pulse.huePeriod[size.rawValue] ?? 16 }
     var oc: BeamSpec.OutsideConstants { spec.pulse.outsideConstants }
 
+    /// Mono is a neutral foreground treatment, so it must oppose the surface
+    /// the same way text does: light over dark, dark over light. The source
+    /// palette is authored for dark surfaces; invert only its RGB channels in
+    /// the light appearance and preserve the authored alpha.
+    func appearanceAdjustedPaletteColor(_ color: BeamRGBA) -> BeamRGBA {
+        guard variant == .mono, !isDark else { return color }
+        return BeamRGBA(r: 1 - color.r, g: 1 - color.g, b: 1 - color.b, a: color.a)
+    }
+
     /// Measured per-element glow scale. The web clamps the *measured* ratio and
     /// then applies `--pulse-glow-boost` on top, so the boost is deliberately
     /// outside the clamp.
@@ -99,7 +108,7 @@ struct PulseBeamLayers: View {
         let spec = config.spec
         let palette = spec.palettes.border[config.variant.rawValue]!.border
         return palette.enumerated().map { i, blob in
-            let c = BeamRGBA(css: blob.color) ?? .clear
+            let c = config.appearanceAdjustedPaletteColor(BeamRGBA(css: blob.color) ?? .clear)
             let pos = parsePercentPair(blob.pos)
             let size = parsePixelPair(blob.size)
             let entry = spec.pulse.ringMap[i]
@@ -115,7 +124,7 @@ struct PulseBeamLayers: View {
         let palette = config.spec.palettes.border[config.variant.rawValue]!.border
         return table.map { e in
             let src = palette[e.ci]
-            let c = BeamRGBA(css: src.color) ?? .clear
+            let c = config.appearanceAdjustedPaletteColor(BeamRGBA(css: src.color) ?? .clear)
             let srcPos = parsePercentPair(src.pos)
             let x = e.x.flatMap { Double($0.replacingOccurrences(of: "%", with: "")) }.map { $0 / 100 } ?? srcPos.x
             let y = e.y.flatMap { Double($0.replacingOccurrences(of: "%", with: "")) }.map { $0 / 100 } ?? srcPos.y

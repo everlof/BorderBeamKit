@@ -42,6 +42,10 @@ All web props are mirrored:
 | `strength` | `Double` | `1` | Overall effect opacity 0–1 (never affects the wrapped content) |
 | `tuning` | `BeamTuning` | `.none` | Pulse-family tuning hooks; `.webDemoPulsePreset` in the demo matches the website's tuned `pulse-outside` card |
 
+The pulse family's `.mono` palette remains neutral across appearances: its
+light-on-dark source colors invert to dark-on-light when the resolved theme is
+light. Colored variants retain their authored palettes in both appearances.
+
 The pulse family honors Reduce Motion, matching the web library.
 
 ## How it works

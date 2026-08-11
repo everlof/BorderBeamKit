@@ -48,6 +48,18 @@ light. Colored variants retain their authored palettes in both appearances.
 
 The pulse family honors Reduce Motion, matching the web library.
 
+### AppKit host
+
+`BorderBeamHostView` is a transparent, decorative `NSView` bridge for AppKit
+callers. Live windows use the SwiftUI + Metal renderer. AppKit's
+`cacheDisplay` path cannot preserve a transparent `NSHostingView` root and
+otherwise paints its centre white, so callers producing screenshots or print
+output must wrap that synchronous render in
+`host.withCachedDisplayFallback { ... }`. The fallback draws a deterministic
+ring from the same bundled palette and size spec while leaving the caller's
+surface pixels untouched. Its pixel contract is covered by
+`appKitHostPreservesTheSurfaceUnderItsTransparentCentre`.
+
 ## How it works
 
 - All hand-tuned visual data (palettes, presets, oscillator tables) is decoded

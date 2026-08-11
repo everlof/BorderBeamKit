@@ -78,6 +78,7 @@ public final class BorderBeamHostView: NSView {
     }
 
     private let hosting: NSHostingView<AnyView>
+    private var usesCachedDisplayFallback = false
 
     // MARK: - Initialization
 
@@ -108,6 +109,33 @@ public final class BorderBeamHostView: NSView {
 
     public override func accessibilityChildren() -> [Any]? { [] }
 
+    /// Runs an AppKit offscreen render without letting `NSHostingView` replace
+    /// the transparent centre with its white cache background. The live host
+    /// remains the source of truth; this substitutes a deterministic native
+    /// ring only for the synchronous cached draw.
+    public func withCachedDisplayFallback<Result>(_ body: () throws -> Result) rethrows -> Result {
+        guard !usesCachedDisplayFallback else { return try body() }
+
+        let wasHidden = hosting.isHidden
+        usesCachedDisplayFallback = true
+        hosting.isHidden = true
+        needsDisplay = true
+        defer {
+            hosting.isHidden = wasHidden
+            usesCachedDisplayFallback = false
+            needsDisplay = true
+        }
+        return try body()
+    }
+
+    public override func draw(_ dirtyRect: NSRect) {
+        guard usesCachedDisplayFallback else {
+            super.draw(dirtyRect)
+            return
+        }
+        drawCachedDisplayRing()
+    }
+
     // MARK: - Private
 
     private func applyRootView() {
@@ -115,6 +143,53 @@ public final class BorderBeamHostView: NSView {
             configuration,
             staticTime: rendersStatically ? configuration.size.staticDisplayTime : nil
         )
+    }
+
+    private func drawCachedDisplayRing() {
+        guard configuration.active, bounds.width > 2, bounds.height > 2 else { return }
+
+        let dark: Bool
+        switch configuration.theme {
+        case .dark:
+            dark = true
+        case .light:
+            dark = false
+        case .auto:
+            dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        }
+
+        let spec = BeamSpec.shared
+        let themeKey = dark ? "dark" : "light"
+        guard let size = spec.sizePresets[configuration.size.rawValue],
+              let theme = spec.sizeThemePresets[configuration.size.rawValue]?[themeKey],
+              let source = spec.palettes.border[configuration.colorVariant.rawValue]?
+                .border.compactMap({ BeamRGBA(css: $0.color) }).first
+        else { return }
+        let color = configuration.colorVariant == .mono && !dark
+            ? BeamRGBA(r: 1 - source.r, g: 1 - source.g, b: 1 - source.b, a: source.a)
+            : source
+        let baseColor = NSColor(
+            srgbRed: CGFloat(color.r),
+            green: CGFloat(color.g),
+            blue: CGFloat(color.b),
+            alpha: CGFloat(color.a)
+        )
+        let strength = CGFloat(min(max(configuration.strength, 0), 1))
+        let radius = CGFloat(configuration.borderRadius ?? size.borderRadius)
+        let path = NSBezierPath(
+            roundedRect: bounds.insetBy(dx: 1, dy: 1),
+            xRadius: max(0, radius - 1),
+            yRadius: max(0, radius - 1)
+        )
+        path.lineWidth = size.borderWidth
+
+        let monoMultiplier = configuration.colorVariant == .mono
+            ? spec.defaults.monoOpacityMultiplier
+            : 1
+        baseColor.withAlphaComponent(
+            baseColor.alphaComponent * CGFloat(theme.strokeOpacity * monoMultiplier) * strength
+        ).setStroke()
+        path.stroke()
     }
 
     private static func rootView(_ c: Configuration, staticTime: Double?) -> AnyView {

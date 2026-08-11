@@ -130,6 +130,47 @@ struct SnapshotTests {
         #expect(blank.isEmpty, "these combinations rendered no beam: \(blank)")
     }
 
+    /// The AppKit host is an overlay, not a surface. `cacheDisplay` is also the
+    /// path used by application-level screenshot evidence, so a transparent
+    /// SwiftUI scene must preserve the AppKit surface underneath it there just
+    /// as it does on screen.
+    @Test func appKitHostPreservesTheSurfaceUnderItsTransparentCentre() throws {
+        guard #available(macOS 14.0, *) else { return }
+
+        let bounds = NSRect(x: 0, y: 0, width: 320, height: 120)
+        let background = NSColor(srgbRed: 0.08, green: 0.09, blue: 0.11, alpha: 1)
+        let surface = NSView(frame: bounds)
+        surface.appearance = NSAppearance(named: .darkAqua)
+        surface.wantsLayer = true
+        surface.layer?.backgroundColor = background.cgColor
+
+        let beam = BorderBeamHostView(configuration: .init(
+            size: .pulseInner,
+            colorVariant: .mono,
+            theme: .dark,
+            borderRadius: 12
+        ))
+        beam.frame = surface.bounds
+        beam.autoresizingMask = [.width, .height]
+        beam.rendersStatically = true
+        surface.addSubview(beam)
+        surface.layoutSubtreeIfNeeded()
+
+        let rep = try #require(surface.bitmapImageRepForCachingDisplay(in: surface.bounds))
+        beam.withCachedDisplayFallback {
+            surface.cacheDisplay(in: surface.bounds, to: rep)
+        }
+        let centre = try #require(
+            rep.colorAt(x: rep.pixelsWide / 2, y: rep.pixelsHigh / 2)?.usingColorSpace(.sRGB)
+        )
+        let expected = try #require(background.usingColorSpace(.sRGB))
+        let difference = abs(centre.redComponent - expected.redComponent)
+            + abs(centre.greenComponent - expected.greenComponent)
+            + abs(centre.blueComponent - expected.blueComponent)
+
+        #expect(difference < 0.05, "transparent centre painted \(centre) over \(expected)")
+    }
+
     /// True when two renders differ measurably — i.e. the beam painted
     /// something. Works for greyscale (`mono`) as well as colored variants.
     static func differs(_ a: Data, _ b: Data) -> Bool {

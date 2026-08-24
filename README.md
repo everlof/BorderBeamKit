@@ -41,6 +41,7 @@ All web props are mirrored:
 | `hueRange` | `Double` | `30` | Hue rotation range in degrees (`line` caps at 13°, web parity) |
 | `strength` | `Double` | `1` | Overall effect opacity 0–1 (never affects the wrapped content) |
 | `tuning` | `BeamTuning` | `.none` | Pulse-family tuning hooks; `.webDemoPulsePreset` in the demo matches the website's tuned `pulse-outside` card |
+| `rendersStatically` | `Bool` | `false` | Freeze the beam at its fully visible reference frame for evidence or other deterministic rendering |
 
 The pulse family's `.mono` palette remains neutral across appearances: its
 light-on-dark source colors invert to dark-on-light when the resolved theme is

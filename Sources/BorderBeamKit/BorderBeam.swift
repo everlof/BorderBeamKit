@@ -28,6 +28,7 @@ public struct BorderBeam<Content: View>: View {
     private let hueRange: Double
     private let strength: Double
     private let tuning: BeamTuning
+    private let rendersStatically: Bool
     private let onActivate: (() -> Void)?
     private let onDeactivate: (() -> Void)?
     private let content: Content
@@ -55,6 +56,7 @@ public struct BorderBeam<Content: View>: View {
         hueRange: Double = 30,
         strength: Double = 1,
         tuning: BeamTuning = .none,
+        rendersStatically: Bool = false,
         onActivate: (() -> Void)? = nil,
         onDeactivate: (() -> Void)? = nil,
         @ViewBuilder content: () -> Content
@@ -71,6 +73,7 @@ public struct BorderBeam<Content: View>: View {
         self.hueRange = hueRange
         self.strength = strength
         self.tuning = tuning
+        self.rendersStatically = rendersStatically
         self.onActivate = onActivate
         self.onDeactivate = onDeactivate
         self.content = content()
@@ -94,6 +97,7 @@ public struct BorderBeam<Content: View>: View {
             }
             .onAppear { if active { setActive(true) } }
             .onChange(of: active) { _, nowActive in setActive(nowActive) }
+            .environment(\.beamFrozenTime, rendersStatically ? 0 : nil)
     }
 
     // MARK: - Lifecycle (fade in/out, web parity: 0.6 s in / 0.5 s out, ease)
@@ -216,6 +220,7 @@ public extension View {
         hueRange: Double = 30,
         strength: Double = 1,
         tuning: BeamTuning = .none,
+        rendersStatically: Bool = false,
         onActivate: (() -> Void)? = nil,
         onDeactivate: (() -> Void)? = nil
     ) -> some View {
@@ -232,6 +237,7 @@ public extension View {
             hueRange: hueRange,
             strength: strength,
             tuning: tuning,
+            rendersStatically: rendersStatically,
             onActivate: onActivate,
             onDeactivate: onDeactivate
         ) { self }

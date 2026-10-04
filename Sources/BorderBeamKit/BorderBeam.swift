@@ -36,6 +36,7 @@ public struct BorderBeam<Content: View>: View {
     @Environment(\.colorScheme) private var colorScheme
     /// Web parity: only the pulse family honors reduced motion.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.beamFrozenTime) private var frozenTime
 
     /// Time-based fade evaluated per-frame in the layers' TimelineViews.
     @State private var fade: BeamFade = .hidden
@@ -97,7 +98,7 @@ public struct BorderBeam<Content: View>: View {
             }
             .onAppear { if active { setActive(true) } }
             .onChange(of: active) { _, nowActive in setActive(nowActive) }
-            .environment(\.beamFrozenTime, rendersStatically ? 0 : nil)
+            .environment(\.beamFrozenTime, rendersStatically ? (frozenTime ?? 0) : frozenTime)
     }
 
     // MARK: - Lifecycle (fade in/out, web parity: 0.6 s in / 0.5 s out, ease)

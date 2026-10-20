@@ -12,7 +12,7 @@ let package = Package(
         .macOS(.v13),
     ],
     products: [
-        .library(name: "BorderBeamKit", targets: ["BorderBeamKit"])
+        .library(name: "BorderBeamKit", type: .static, targets: ["BorderBeamKit"])
     ],
     targets: [
         .target(
